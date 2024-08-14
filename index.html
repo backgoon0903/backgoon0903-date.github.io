@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="menuDiv"></div>
+        <ul></ul>
+      <div class="cartDiv"></div>
+    </div>
+    <script type="module">
+      import {getList,findMenu} from './product.js'
+      import {addCart,changeQty} from './cart.js'
+
+
+      const menuList = getList()
+      const menuUL = document.querySelector('.menuDiv ul')
+      const cartUL = document.querySelector('.cartDiv ul')
+
+      menuUL.innerHTML =
+              menuList.map
+              (menu => `<li>
+                          <div data-pno = "${menu.pno}">
+                          ${menu.pno}
+                          ${menu.pname}
+                          ${menu.price}
+                          </div>
+
+                          </li>`).join('')
+
+      menuUL.addEventListener('click', e => {
+        const target = e.target
+
+
+        const pno = target.dataset.pno
+        const menu = findMenu(parseInt(pno))
+        if (!menu) {
+          return
+        }
+
+        //console.log(menu)
+        addCart(menu, refreshCart)
+
+
+      },false)
+
+      const refreshCart = (buyItems) => {
+
+        cartUL.innerHTML = buyItems.map(
+          cart => `<li>
+                   <div data-pno=${caddrt.pno}>
+                   ${cart.pno}
+                   ${cart.pname}
+                   ${cart.price}
+                   ${cart.qty}
+                   </div>
+                   <div>
+                    <button data-pno="${cart.pno}" data-job="plus">+</button>
+                    <button data-pno="${cart.pno}" data-job="minus">-</button>
+                    </div>
+                   </li>`).join('')
+      }
+
+      cartUL.addEventListener("click", e =>{
+        const target = e.target
+
+        const pno = target.dataset.pno
+        const job = target.dataset.job
+
+        changeQty(parseInt(pno), job, refreshCart)
+
+        console.log(target)
+      },false)
+
+    </script>
+  </body>
+</html>
