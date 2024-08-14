@@ -1,81 +1,116 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="app">
-      <div class="menuDiv"></div>
-        <ul></ul>
-      <div class="cartDiv"></div>
-    </div>
-    <script type="module">
-      import {getList,findMenu} from './product.js'
-      import {addCart,changeQty} from './cart.js'
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Kakao 지도 시작하기</title>
+</head>
+<body>
+<div id="map" style="width:100vw;height:50vh;"></div>
 
+<div class="operDiv">
+    <button class="loadBtn s1">day1</button>
+    <button class="loadBtn s2">day2</button>
+    <button class="loadBtn s3">day3</button>
+    <button class="loadBtn s4">day4</button>
 
-      const menuList = getList()
-      const menuUL = document.querySelector('.menuDiv ul')
-      const cartUL = document.querySelector('.cartDiv ul')
+</div>
 
-      menuUL.innerHTML =
-              menuList.map
-              (menu => `<li>
-                          <div data-pno = "${menu.pno}">
-                          ${menu.pno}
-                          ${menu.pname}
-                          ${menu.price}
-                          </div>
+<div class="listDiv">
+    <ul class="listUL">
 
-                          </li>`).join('')
+    </ul>
+</div>
 
-      menuUL.addEventListener('click', e => {
-        const target = e.target
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=22b4a29c1d13a5284fa8169da6dbc739"></script>
+<script>
+    const container = document.querySelector("#map")
+    const options = {
+        center: new kakao.maps.LatLng(35.168976, 129.136041),
+        level: 3
+    };
 
+    const map = new kakao.maps.Map(container, options);
 
-        const pno = target.dataset.pno
-        const menu = findMenu(parseInt(pno))
-        if (!menu) {
-          return
+    var mapTypeControl = new kakao.maps.MapTypeControl();
+    map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+    var zoomControl = new kakao.maps.ZoomControl();
+    map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+    map.markers = []
+
+    map.addCustomMarker = (obj) => {
+        console.log(obj)
+
+        const targetMarker = map.markers.find(m => m.store.lat == obj.store.lat)
+
+        if(!targetMarker) {
+            obj.setMap(map)
+            map.markers.push(obj)
         }
+    };
 
-        //console.log(menu)
-        addCart(menu, refreshCart)
+</script>
 
+<script type="module">
 
-      },false)
+    import axios from "axios"
 
-      const refreshCart = (buyItems) => {
+    let arr = []
 
-        cartUL.innerHTML = buyItems.map(
-          cart => `<li>
-                   <div data-pno=${caddrt.pno}>
-                   ${cart.pno}
-                   ${cart.pname}
-                   ${cart.price}
-                   ${cart.qty}
-                   </div>
-                   <div>
-                    <button data-pno="${cart.pno}" data-job="plus">+</button>
-                    <button data-pno="${cart.pno}" data-job="minus">-</button>
-                    </div>
-                   </li>`).join('')
-      }
-
-      cartUL.addEventListener("click", e =>{
+    document.querySelector(".operDiv").addEventListener("click", e => {
         const target = e.target
 
-        const pno = target.dataset.pno
-        const job = target.dataset.job
+        const url = `/${target.classList[1]}.json`
 
-        changeQty(parseInt(pno), job, refreshCart)
+        axios.get(url).then( res => {
 
-        console.log(target)
-      },false)
+            arr = eval(res.data) //절대 금지된 코드
 
-    </script>
-  </body>
+            arr.forEach(store => {
+                const moveLatLon = new kakao.maps.LatLng(store.lat, store.lng);
+
+                const marker = new kakao.maps.Marker({
+                    position: moveLatLon
+                });
+                marker.store = store
+
+                map.addCustomMarker(marker)
+            })//end forEach
+
+            listUL.innerHTML = arr.map(store =>
+                `<li>
+<div data-sno=${store.sno}>
+${store.sno}
+${store.sname}
+</div>
+</li>`).join('')
+        })
+
+    },false)
+
+
+    const listUL = document.querySelector('.listUL')
+
+    listUL.addEventListener('click', e => {
+        const target = e.target
+        const sno = target.dataset.sno
+        const store = arr.find( store => store.sno == parseInt(sno) )
+
+        const moveLatLon = new kakao.maps.LatLng(store.lat, store.lng);
+
+        map.panTo(moveLatLon)
+
+        const marker = new kakao.maps.Marker({
+            position: moveLatLon
+        });
+        marker.store = store
+
+        map.addCustomMarker(marker)
+
+    },false)
+
+
+</script>
+</body>
 </html>
